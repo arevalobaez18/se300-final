@@ -1,6 +1,10 @@
 package com.se300.ledger.repository;
 
-public interface TransactionRepository {
+import com.se300.ledger.model.Transaction;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-    //TODO: Implement TransactionRepository
+@Repository
+public interface TransactionRepository extends CrudRepository<Transaction, String> {
+
 }

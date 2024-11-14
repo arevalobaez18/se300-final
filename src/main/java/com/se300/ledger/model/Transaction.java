@@ -1,5 +1,9 @@
 package com.se300.ledger.model;
 
+import jakarta.persistence.*;
+
+import java.util.Objects;
+
 /**
  * Transaction class implementation representing operation in the Blockchain
  *
@@ -7,14 +11,26 @@ package com.se300.ledger.model;
  * @version 1.0
  * @since   2023-10-11
  */
+@Entity
 public class Transaction {
 
+    @Id
     private String transactionId;
+    @Column
     private Integer amount;
+    @Column
     private Integer fee;
+    @Column
     private String note;
+    @ManyToOne
+    @JoinColumn(name = "payer_id")
     private Account payer;
+    @ManyToOne
+    @JoinColumn(name = "receiver_id")
     private Account receiver;
+
+    public Transaction() {
+    }
 
     /**
      * Constructor for Transaction
@@ -142,6 +158,19 @@ public class Transaction {
                 ", Note: " + note +
                 ", Payer: " + payer.getAddress() +
                 ", Receiver: " + receiver.getAddress();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Transaction)) return false;
+        Transaction that = (Transaction) o;
+        return getTransactionId().equals(that.getTransactionId()) && getAmount().equals(that.getAmount()) && getFee().equals(that.getFee()) && getNote().equals(that.getNote()) && getPayer().equals(that.getPayer()) && getReceiver().equals(that.getReceiver());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTransactionId(), getAmount(), getFee(), getNote(), getPayer(), getReceiver());
     }
 }
 

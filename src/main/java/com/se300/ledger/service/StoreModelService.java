@@ -24,7 +24,7 @@ import java.util.stream.StreamSupport;
  *
  * @author  Sergey L. Sundukovskiy
  * @version 1.0
- * @since   2023-10-11
+ * @since   2024-11-14
  */
 @Service
 public class StoreModelService implements StoreModelAPI {
@@ -72,7 +72,7 @@ public class StoreModelService implements StoreModelAPI {
     public Store provisionStore(Long storeId, String address, String description, String token)
             throws StoreModelException {
 
-        //Store store = new Store(storeId, name, address);
+        //Save Store
         Store store = storeRepository.save(new Store(storeId,address, description));
 
         //If Store already exists throw and exception

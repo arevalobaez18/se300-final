@@ -6,35 +6,35 @@ import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.response.Response;
+import org.json.JSONException;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Value;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 
-@SpringBootTest(classes = {TestSmartStoreApplication.class},webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class AuthTest {
-
-    @LocalServerPort
-    private Integer port;
-
+@SpringBootTest(classes = TestSmartStoreApplication.class)
+public class RestExternalMockControllerTest {
     @Test
-    void testStoreAuth() {
+    void testGetStoreById() throws JSONException {
 
-         RestAssured
+        String expectedJson = "{\"id\":\"1\",\"address\":\"Lubbock\",\"description\":\"Global\"}";
+
+        ExtractableResponse<Response> response = RestAssured
                 .given()
                 .filter(new RequestLoggingFilter())
                 .auth().basic("sergey", "chapman")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("http://localhost:" + port + "/stores/1")
+                .get("https://67343da5a042ab85d1195422.mockapi.io/stores/1")
                 .then()
                 .statusCode(200)
                 .extract();
+
+        JSONAssert.assertEquals(expectedJson, response.body().asPrettyString(),true);
     }
 
     @Test
-    void testAccountAuth() {
+    void testGetAccountById() throws JSONException {
 
-        //TODO: Implement Get Account By Id Authentication Testing
+        //TODO: Implement Retrieving Account by Id Using External Mock Testing
     }
 }

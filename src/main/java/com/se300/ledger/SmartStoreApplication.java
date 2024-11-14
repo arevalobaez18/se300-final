@@ -1,9 +1,8 @@
 package com.se300.ledger;
 
-import com.se300.ledger.model.Basket;
-import com.se300.ledger.model.CustomerType;
+import com.se300.ledger.model.*;
+import com.se300.ledger.service.LedgerAPI;
 import com.se300.ledger.service.StoreModelAPI;
-import com.se300.ledger.model.Customer;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.boot.CommandLineRunner;
@@ -32,7 +31,7 @@ public class SmartStoreApplication {
     }
 
     @Bean
-    CommandLineRunner initDatabase(StoreModelAPI storeService) {
+    CommandLineRunner initDatabase(StoreModelAPI storeService, LedgerAPI ledger) {
         return args -> {
 
             storeService.provisionStore(1L, "75 Forbes", "My First Store", null);
@@ -45,6 +44,7 @@ public class SmartStoreApplication {
             storeService.assignCustomerBasket(customer.getId(), basket.getId(), null);
 
             //TODO: Implement Ledger Instantiation, Account and Transaction Persistence
+
         };
     }
 

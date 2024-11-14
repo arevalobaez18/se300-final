@@ -11,12 +11,15 @@ import java.util.*;
  *
  * @author  Sergey L. Sundukovskiy
  * @version 1.0
- * @since   2023-10-11
+ * @since   2024-11-14
  */
 @Entity
 public class Store {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id",unique=true, nullable = false)
     private Long id;
     private String address;
     private String description;

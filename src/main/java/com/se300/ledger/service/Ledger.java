@@ -1,6 +1,12 @@
 package com.se300.ledger.service;
 
 import com.se300.ledger.model.*;
+import com.se300.ledger.repository.AccountRepository;
+import com.se300.ledger.repository.TransactionRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import static java.util.Map.*;
@@ -10,22 +16,31 @@ import static java.util.Map.*;
  *
  * @author  Sergey L. Sundukovskiy
  * @version 1.0
- * @since   2023-10-11
+ * @since   2024-11-14
  */
-public class Ledger {
+@RequiredArgsConstructor
+@Service
+public class Ledger implements LedgerAPI {
+
+    AccountRepository accountRepository;
+
+    @Autowired
+    TransactionRepository transactionRepository;
+
     private String name;
     private String description;
     private String seed;
-    private final static NavigableMap <Integer, Block> blockMap;
-    private static Block uncommittedBlock;
+    private static NavigableMap <Integer, Block> blockMap = new TreeMap<>();
+    private static Block uncommittedBlock = new Block(1, "");
 
     private static Ledger ledger;
 
-    // Initialize genesis block and the account list
-    static {
-        blockMap = new TreeMap<>();
-        uncommittedBlock = new Block(1, "");
-        uncommittedBlock.addAccount("master", new Account("master", Integer.MAX_VALUE));
+    @PostConstruct
+    private void createMasterAccount(){
+        Account masterAccount = new Account("master", Integer.MAX_VALUE);
+        uncommittedBlock.addAccount("master", masterAccount);
+
+        //TODO: Implement Master Account Saving
     }
 
     /**
@@ -35,8 +50,9 @@ public class Ledger {
      * @param seed
      * @return
      */
-    public static synchronized Ledger getInstance(String name, String description, String seed) {
+    public static synchronized Ledger getInstance(String name, String description,  String seed) {
         if (ledger == null) {
+            blockMap = new TreeMap<>();
             ledger = new Ledger(name, description, seed);
         }
         return ledger;
@@ -107,6 +123,7 @@ public class Ledger {
      * @param address
      * @return Account representing account in the Blockchain
      */
+
     public Account createAccount(String address) throws LedgerException {
 
         if(uncommittedBlock.getAccount(address) != null){
@@ -114,7 +131,11 @@ public class Ledger {
         }
 
         Account account = new Account(address, 0);
+
         uncommittedBlock.addAccount(address, account);
+
+        //TODO: Implement Account Saving
+
         return account;
     }
 
@@ -135,7 +156,7 @@ public class Ledger {
             throw new LedgerException("Process Transaction", "Note Length Must Be Less Than 1024 Chars");
         }
 
-        if(ledger.getTransaction(transaction.getTransactionId()) != null){
+        if(this.getTransaction(transaction.getTransactionId()) != null){
             throw new LedgerException("Process Transaction", "Transaction Id Must Be Unique");
         }
 
@@ -152,6 +173,7 @@ public class Ledger {
         tempReceiverAccount.setBalance(tempReceiverAccount.getBalance() + transaction.getAmount());
 
         uncommittedBlock.getTransactionList().add(transaction);
+        transactionRepository.save(transaction);
 
         //Check to see if account blocked has reached max size
         if (uncommittedBlock.getTransactionList().size() == 10){
@@ -186,6 +208,8 @@ public class Ledger {
             for (Account account : accountList) {
                 Account tempAccount = (Account) account.clone();
                 uncommittedBlock.addAccount(tempAccount.getAddress(), tempAccount);
+
+                //TODO: Implement Account Saving
             }
 
             //Link to previous block
@@ -243,7 +267,7 @@ public class Ledger {
      * @param blockNumber
      * @return Block or Null
      */
-    public Block getBlock (Integer blockNumber) throws LedgerException {
+    public Block getBlock(Integer blockNumber) throws LedgerException {
         Block block = blockMap.get(blockNumber);
         if(block == null){
             throw new LedgerException("Get Block", "Block Does Not Exist");
@@ -256,7 +280,8 @@ public class Ledger {
      * @param transactionId
      * @return Transaction or Null
      */
-    public Transaction getTransaction (String transactionId){
+
+    public Transaction getTransaction(String transactionId){
 
         for ( Entry mapElement : blockMap.entrySet()) {
 
@@ -281,6 +306,7 @@ public class Ledger {
      * Get number of Blocks in the Blockchain
      * @return int representing number of blocks committed to Blockchain
      */
+
     public int getNumberOfBlocks(){
         return blockMap.size();
     }
@@ -291,6 +317,7 @@ public class Ledger {
      * Check each block for Transaction count
      * Check account balances against the total
      */
+
     public void validate() throws LedgerException {
 
         Block committedBlock = blockMap.lastEntry().getValue();
@@ -312,7 +339,7 @@ public class Ledger {
                 if(!block.getPreviousHash().equals(block.getPreviousBlock().getHash())){
                     throw new LedgerException("Validate", "Hash Is Inconsistent: "
                             + block.getBlockNumber());
-            }
+                }
 
             //Check for Transaction Count
             if(block.getTransactionList().size() != 10){
@@ -338,7 +365,17 @@ public class Ledger {
      * Helper method for CommandProcessor
      * @return current block we are working with
      */
+
     public Block getUncommittedBlock(){
         return uncommittedBlock;
+    }
+
+    /**
+     * Helper method allowing reset the state of the Ledger
+     */
+    public synchronized void reset(){
+        blockMap = new TreeMap<>();
+        uncommittedBlock = new Block(1, "");
+        uncommittedBlock.addAccount("master", new Account("master", Integer.MAX_VALUE));
     }
 }

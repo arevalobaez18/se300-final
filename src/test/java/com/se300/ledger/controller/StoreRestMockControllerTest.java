@@ -1,6 +1,5 @@
 package com.se300.ledger.controller;
 
-import com.se300.ledger.SmartStoreApplication;
 import com.se300.ledger.TestSmartStoreApplication;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,13 +13,24 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-public class LedgerRestMockControllerTest {
+@SpringBootTest(classes = TestSmartStoreApplication.class)
+@RunWith(SpringRunner.class)
+public class StoreRestMockControllerTest {
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    private MockMvc mockMvc;
+
+    @Before
+    public void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
 
     @Test
-    public void testGetAccountById() throws Exception {
-
-        //TODO: Implement Test Retrieving Account by Id Mock Testing
+    public void testGetStoreById() throws Exception {
+        mockMvc.perform(get("/stores/1")).andExpect(status().isOk())
+                .andExpect(content().contentType("application/json"))
+                .andExpect(jsonPath("$.address").value("75 Forbes"));
     }
 }
