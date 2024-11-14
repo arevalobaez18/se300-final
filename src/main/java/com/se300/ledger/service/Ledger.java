@@ -22,8 +22,6 @@ import static java.util.Map.*;
 @Service
 public class Ledger implements LedgerAPI {
 
-    AccountRepository accountRepository;
-
     @Autowired
     TransactionRepository transactionRepository;
 
