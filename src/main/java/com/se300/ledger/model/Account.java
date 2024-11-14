@@ -14,8 +14,10 @@ import java.util.Objects;
  * @since   2024-11-14
  */
 //TODO: Implement Mapping Account to the Database Table
+@Entity
 public class Account {
 
+    @Id
     private String address;
     private Integer balance;
 
