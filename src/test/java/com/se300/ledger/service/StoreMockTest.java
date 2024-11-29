@@ -4,6 +4,7 @@ import com.se300.ledger.TestSmartStoreApplication;
 import com.se300.ledger.model.Store;
 import com.se300.ledger.model.StoreModelException;
 import com.se300.ledger.repository.StoreRepository;
+import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = {TestSmartStoreApplication.class} )
+@SpringBootTest(classes = {TestSmartStoreApplication.class})
 public class StoreMockTest {
 
     @MockBean
@@ -25,6 +26,11 @@ public class StoreMockTest {
     @Autowired
     private StoreModelService storeService;
 
+    @PostConstruct
+    public void prepare() {
+        this.storeService.storeRepository = storeRepository;
+    }
+
     @Test
     public void testSaveStore() throws LedgerException, StoreModelException {
 
@@ -32,6 +38,7 @@ public class StoreMockTest {
 
         when(storeRepository.save(any())).thenReturn(store);
         Store copyStore = storeService.provisionStore(Long.parseLong("2"), "75 Forbes", "My First Store", null);
+        verify(storeRepository, times(1)).save(any());
 
         assertAll("Verify Account properties",
                 () -> assertEquals(copyStore.getId(), store.getId()),

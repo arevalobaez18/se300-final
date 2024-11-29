@@ -37,6 +37,7 @@ public class StoreModelService implements StoreModelAPI {
     @Autowired
     CustomerRepository customerRepository;
 
+
     private static final Map<Long, Store> storeMap;
     private static final Map<Long, Customer> customerMap;
     private static final Map<Long, Product> productMap;
