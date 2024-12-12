@@ -29,12 +29,27 @@ public class RestExternalMockControllerTest {
                 .statusCode(200)
                 .extract();
 
-        JSONAssert.assertEquals(expectedJson, response.body().asPrettyString(),true);
+        JSONAssert.assertEquals(expectedJson, response.body().asPrettyString(), true);
     }
 
     @Test
     void testGetAccountById() throws JSONException {
 
-        //TODO: Implement Retrieving Account by Id Using External Mock Testing
+        // TODO - Done?: Implement Retrieving Account by Id Using External Mock Testing
+        String expectedJson = "{\"id\":\"1\",\"name\":\"John Doe\",\"balance\":1000}";
+
+        ExtractableResponse<Response> response = RestAssured
+                .given()
+                .filter(new RequestLoggingFilter())
+                .auth().basic("sergey", "chapman")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("https://67343da5a042ab85d1195422.mockapi.io/accounts/1")
+                .then()
+                .statusCode(200)
+                .extract();
+
+        JSONAssert.assertEquals(expectedJson, response.body().asPrettyString(), true);
+
     }
 }

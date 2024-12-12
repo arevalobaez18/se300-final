@@ -9,20 +9,23 @@ import java.util.Objects;
 /**
  * Account class implementation representing account in the Blockchain
  *
- * @author  Sergey L. Sundukovskiy
+ * @author Sergey L. Sundukovskiy
  * @version 1.0
- * @since   2024-11-14
+ * @since 2024-11-14
  */
-//TODO: Implement Mapping Account to the Database Table
 @Entity
 public class Account {
 
     @Id
+    @Column(name = "address", nullable = false, unique = true)
     private String address;
+
+    @Column(name = "balance", nullable = false)
     private Integer balance;
 
     /**
      * Account Constructor
+     * 
      * @param address
      * @param balance
      */
@@ -37,6 +40,7 @@ public class Account {
 
     /**
      * Getter Method for account address
+     * 
      * @return
      */
     public String getAddress() {
@@ -45,6 +49,7 @@ public class Account {
 
     /**
      * Setter Method for account address
+     * 
      * @param address
      */
     public void setAddress(String address) {
@@ -53,6 +58,7 @@ public class Account {
 
     /**
      * Getter method for account balance
+     * 
      * @return
      */
     public int getBalance() {
@@ -61,6 +67,7 @@ public class Account {
 
     /**
      * Setter method for account balance
+     * 
      * @param balance
      */
     public void setBalance(Integer balance) {
@@ -69,6 +76,7 @@ public class Account {
 
     /**
      * Method for creating an account copy
+     * 
      * @return
      */
     public Object clone() {
@@ -77,8 +85,10 @@ public class Account {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Account account)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Account account))
+            return false;
         return address.equals(account.address) && balance.equals(account.balance);
     }
 

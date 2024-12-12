@@ -9,14 +9,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.Map.Entry;
+
 import static java.util.Map.*;
 
 /**
  * Ledger Class representing simple implementation of Blockchain
  *
- * @author  Sergey L. Sundukovskiy
+ * @author Sergey L. Sundukovskiy
  * @version 1.0
- * @since   2024-11-14
+ * @since 2024-11-14
  */
 @RequiredArgsConstructor
 @Service
@@ -28,27 +30,32 @@ public class Ledger implements LedgerAPI {
     private String name;
     private String description;
     private String seed;
-    private static NavigableMap <Integer, Block> blockMap = new TreeMap<>();
+    private static NavigableMap<Integer, Block> blockMap = new TreeMap<>();
     private static Block uncommittedBlock = new Block(1, "");
 
     private static Ledger ledger;
 
+    @Autowired
+    private AccountRepository accountRepository;
+
     @PostConstruct
-    private void createMasterAccount(){
+    private void createMasterAccount() {
         Account masterAccount = new Account("master", Integer.MAX_VALUE);
         uncommittedBlock.addAccount("master", masterAccount);
 
-        //TODO: Implement Master Account Saving
+        // Save the account repository, functions similarly from TransactionRepository
+        accountRepository.save(masterAccount);
     }
 
     /**
      * Create singleton of the Ledger
+     * 
      * @param name
      * @param description
      * @param seed
      * @return
      */
-    public static synchronized Ledger getInstance(String name, String description,  String seed) {
+    public static synchronized Ledger getInstance(String name, String description, String seed) {
         if (ledger == null) {
             blockMap = new TreeMap<>();
             ledger = new Ledger(name, description, seed);
@@ -58,6 +65,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Private Ledger Constructor
+     * 
      * @param name
      * @param description
      * @param seed
@@ -70,6 +78,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Getter method for the name of the Ledger
+     * 
      * @return
      */
     public String getName() {
@@ -78,6 +87,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Setter Method for the name of the Ledger
+     * 
      * @param name
      */
     public void setName(String name) {
@@ -86,6 +96,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Getter Method for Ledger description
+     * 
      * @return String
      */
     public String getDescription() {
@@ -94,6 +105,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Setter Method for Description
+     * 
      * @param description
      */
     public void setDescription(String description) {
@@ -102,6 +114,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Getter Method for the seed
+     * 
      * @return String
      */
     public String getSeed() {
@@ -110,6 +123,7 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Setter Method for the seed
+     * 
      * @param seed
      */
     public void setSeed(String seed) {
@@ -118,13 +132,14 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Method for creating accounts in the blockchain
+     * 
      * @param address
      * @return Account representing account in the Blockchain
      */
 
     public Account createAccount(String address) throws LedgerException {
 
-        if(uncommittedBlock.getAccount(address) != null){
+        if (uncommittedBlock.getAccount(address) != null) {
             throw new LedgerException("Create Account", "Account Already Exists");
         }
 
@@ -132,55 +147,58 @@ public class Ledger implements LedgerAPI {
 
         uncommittedBlock.addAccount(address, account);
 
-        //TODO: Implement Account Saving
+        // Save the new account
+        accountRepository.save(account);
 
         return account;
     }
 
     /**
-     * Method implementing core functionality of the Blockchain by handling given transaction
+     * Method implementing core functionality of the Blockchain by handling given
+     * transaction
+     * 
      * @param transaction
      * @return String representing transaction id
      * @throws LedgerException
      */
     public synchronized String processTransaction(Transaction transaction) throws LedgerException {
 
-        //Check for transaction specification conditions
-        if(transaction.getAmount() < 0 || transaction.getAmount() > Integer.MAX_VALUE ){
+        // Check for transaction specification conditions
+        if (transaction.getAmount() < 0 || transaction.getAmount() > Integer.MAX_VALUE) {
             throw new LedgerException("Process Transaction", "Transaction Amount Is Out of Range");
         } else if (transaction.getFee() < 10) {
             throw new LedgerException("Process Transaction", "Transaction Fee Must Be Greater Than 10");
-        } else if (transaction.getNote().length() > 1024){
+        } else if (transaction.getNote().length() > 1024) {
             throw new LedgerException("Process Transaction", "Note Length Must Be Less Than 1024 Chars");
         }
 
-        if(this.getTransaction(transaction.getTransactionId()) != null){
+        if (this.getTransaction(transaction.getTransactionId()) != null) {
             throw new LedgerException("Process Transaction", "Transaction Id Must Be Unique");
         }
 
         Account tempPayerAccount = transaction.getPayer();
         Account tempReceiverAccount = transaction.getReceiver();
 
-        if(transaction.getPayer().getBalance() < (transaction.getAmount() + transaction.getFee()))
+        if (transaction.getPayer().getBalance() < (transaction.getAmount() + transaction.getFee()))
             throw new LedgerException("Process Transaction", "Payer Does Not Have Required Funds");
 
-        //Deduct balance of the payer
+        // Deduct balance of the payer
         tempPayerAccount.setBalance(tempPayerAccount.getBalance()
                 - transaction.getAmount() - transaction.getFee());
-        //Increase balance of the receiver
+        // Increase balance of the receiver
         tempReceiverAccount.setBalance(tempReceiverAccount.getBalance() + transaction.getAmount());
 
         uncommittedBlock.getTransactionList().add(transaction);
         transactionRepository.save(transaction);
 
-        //Check to see if account blocked has reached max size
-        if (uncommittedBlock.getTransactionList().size() == 10){
+        // Check to see if account blocked has reached max size
+        if (uncommittedBlock.getTransactionList().size() == 10) {
 
             List<String> tempTxList = new ArrayList<>();
             tempTxList.add(seed);
 
-            //Loop through the list of transaction to get the hash
-            for( Transaction tempTx : uncommittedBlock.getTransactionList()){
+            // Loop through the list of transaction to get the hash
+            for (Transaction tempTx : uncommittedBlock.getTransactionList()) {
                 tempTxList.add(tempTx.toString());
             }
 
@@ -188,29 +206,30 @@ public class Ledger implements LedgerAPI {
             merkleTrees.merkle_tree();
             uncommittedBlock.setHash(merkleTrees.getRoot());
 
-            //Commit uncommitted block
+            // Commit uncommitted block
             blockMap.put(uncommittedBlock.getBlockNumber(), uncommittedBlock);
 
-            //Get committed block
+            // Get committed block
             Block committedBlock = blockMap.lastEntry().getValue();
-            Map<String,Account> accountMap = committedBlock.getAccountBalanceMap();
+            Map<String, Account> accountMap = committedBlock.getAccountBalanceMap();
 
-            //Get all the accounts
+            // Get all the accounts
             List<Account> accountList = new ArrayList<Account>(accountMap.values());
 
-            //Create next block
+            // Create next block
             uncommittedBlock = new Block(uncommittedBlock.getBlockNumber() + 1,
                     committedBlock.getHash());
 
-            //Replicate accounts
+            // Replicate accounts
             for (Account account : accountList) {
                 Account tempAccount = (Account) account.clone();
                 uncommittedBlock.addAccount(tempAccount.getAddress(), tempAccount);
 
-                //TODO: Implement Account Saving
+                // Save the replicated account
+                accountRepository.save(tempAccount);
             }
 
-            //Link to previous block
+            // Link to previous block
             uncommittedBlock.setPreviousBlock(committedBlock);
         }
 
@@ -219,14 +238,15 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Get Account balance by address
+     * 
      * @param address
      * @return Integer representing balance of the Account
      * @throws LedgerException
      */
     public Integer getAccountBalance(String address) throws LedgerException {
 
-        if(blockMap.isEmpty()){
-            throw new LedgerException("Get Account Balance", "Account Is Not Committed to a Block");
+        if (blockMap.isEmpty()) {
+            throw new LedgerException(" Balance", "Account Is Not Committed to a Block");
         }
 
         Block block = blockMap.lastEntry().getValue();
@@ -240,15 +260,16 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Get all Account balances that are part of the Blockchain
+     * 
      * @return Map representing Accounts and balances
      */
-    public Map<String,Integer> getAccountBalances(){
+    public Map<String, Integer> getAccountBalances() {
 
-        if(blockMap.isEmpty())
+        if (blockMap.isEmpty())
             return null;
 
         Block committedBlock = blockMap.lastEntry().getValue();
-        Map<String,Account> accountMap = committedBlock.getAccountBalanceMap();
+        Map<String, Account> accountMap = committedBlock.getAccountBalanceMap();
 
         Map<String, Integer> balances = new HashMap<>();
         List<Account> accountList = new ArrayList<>(accountMap.values());
@@ -262,12 +283,13 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Get Block by id
+     * 
      * @param blockNumber
      * @return Block or Null
      */
     public Block getBlock(Integer blockNumber) throws LedgerException {
         Block block = blockMap.get(blockNumber);
-        if(block == null){
+        if (block == null) {
             throw new LedgerException("Get Block", "Block Does Not Exist");
         }
         return block;
@@ -275,25 +297,26 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Get Transaction by id
+     * 
      * @param transactionId
      * @return Transaction or Null
      */
 
-    public Transaction getTransaction(String transactionId){
+    public Transaction getTransaction(String transactionId) {
 
-        for ( Entry mapElement : blockMap.entrySet()) {
+        for (Entry mapElement : blockMap.entrySet()) {
 
             // Finding specific transactions in the committed blocks
             Block tempBlock = (Block) mapElement.getValue();
-            for (Transaction transaction : tempBlock.getTransactionList()){
-                if(transaction.getTransactionId().equals(transactionId)){
+            for (Transaction transaction : tempBlock.getTransactionList()) {
+                if (transaction.getTransactionId().equals(transactionId)) {
                     return transaction;
                 }
             }
         }
         // Finding specific transactions in the uncommitted block
-        for (Transaction transaction : uncommittedBlock.getTransactionList()){
-            if(transaction.getTransactionId().equals(transactionId)){
+        for (Transaction transaction : uncommittedBlock.getTransactionList()) {
+            if (transaction.getTransactionId().equals(transactionId)) {
                 return transaction;
             }
         }
@@ -302,10 +325,11 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Get number of Blocks in the Blockchain
+     * 
      * @return int representing number of blocks committed to Blockchain
      */
 
-    public int getNumberOfBlocks(){
+    public int getNumberOfBlocks() {
         return blockMap.size();
     }
 
@@ -319,7 +343,7 @@ public class Ledger implements LedgerAPI {
     public void validate() throws LedgerException {
 
         Block committedBlock = blockMap.lastEntry().getValue();
-        Map<String,Account> accountMap = committedBlock.getAccountBalanceMap();
+        Map<String, Account> accountMap = committedBlock.getAccountBalanceMap();
         List<Account> accountList = new ArrayList<>(accountMap.values());
 
         int totalBalance = 0;
@@ -329,31 +353,31 @@ public class Ledger implements LedgerAPI {
 
         int fees = 0;
         String hash;
-        for(Integer key : blockMap.keySet()){
+        for (Integer key : blockMap.keySet()) {
             Block block = blockMap.get(key);
 
-            //Check for Hash Consistency
-            if(block.getBlockNumber() != 1)
-                if(!block.getPreviousHash().equals(block.getPreviousBlock().getHash())){
+            // Check for Hash Consistency
+            if (block.getBlockNumber() != 1)
+                if (!block.getPreviousHash().equals(block.getPreviousBlock().getHash())) {
                     throw new LedgerException("Validate", "Hash Is Inconsistent: "
                             + block.getBlockNumber());
                 }
 
-            //Check for Transaction Count
-            if(block.getTransactionList().size() != 10){
+            // Check for Transaction Count
+            if (block.getTransactionList().size() != 10) {
                 throw new LedgerException("Validate", "Transaction Count Is Not 10 In Block: "
                         + block.getBlockNumber());
             }
 
-            for(Transaction transaction : block.getTransactionList()){
+            for (Transaction transaction : block.getTransactionList()) {
                 fees += transaction.getFee();
             }
         }
 
         int adjustedBalance = totalBalance + fees;
 
-        //Check for account balances against the total
-        if(adjustedBalance != Integer.MAX_VALUE){
+        // Check for account balances against the total
+        if (adjustedBalance != Integer.MAX_VALUE) {
             throw new LedgerException("Validate", "Balance Does Not Add Up");
         }
 
@@ -361,17 +385,18 @@ public class Ledger implements LedgerAPI {
 
     /**
      * Helper method for CommandProcessor
+     * 
      * @return current block we are working with
      */
 
-    public Block getUncommittedBlock(){
+    public Block getUncommittedBlock() {
         return uncommittedBlock;
     }
 
     /**
      * Helper method allowing reset the state of the Ledger
      */
-    public synchronized void reset(){
+    public synchronized void reset() {
         blockMap = new TreeMap<>();
         uncommittedBlock = new Block(1, "");
         uncommittedBlock.addAccount("master", new Account("master", Integer.MAX_VALUE));

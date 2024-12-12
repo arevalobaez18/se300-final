@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
-@SpringBootTest(classes = {TestSmartStoreApplication.class},webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {
+        TestSmartStoreApplication.class }, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthTest {
 
     @LocalServerPort
@@ -20,7 +21,7 @@ class AuthTest {
     @Test
     void testStoreAuth() {
 
-         RestAssured
+        RestAssured
                 .given()
                 .filter(new RequestLoggingFilter())
                 .auth().basic("sergey", "chapman")
@@ -35,6 +36,16 @@ class AuthTest {
     @Test
     void testAccountAuth() {
 
-        //TODO: Implement Get Account By Id Authentication Testing
+        // TODO - DONE?: Implement Get Account By Id Authentication Testing
+        RestAssured
+                .given()
+                .filter(new RequestLoggingFilter())
+                .auth().basic("sergey", "chapman")
+                .contentType(ContentType.JSON)
+                .when()
+                .get("http://localhost:" + port + "/accounts/1") // Assuming the endpoint is /accounts/1
+                .then()
+                .statusCode(200) // Assuming a successful authentication returns a 200 status code
+                .extract();
     }
 }

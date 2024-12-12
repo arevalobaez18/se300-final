@@ -4,8 +4,11 @@ import com.se300.ledger.model.Account;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-public interface AccountRepository {
+@Repository
+public interface AccountRepository extends CrudRepository<Account, String> {
 
-    //TODO: Implement Account Repository
+    Account findByAddress(String address);
+
+    // TODO - Done?: Implement Account Repository
 
 }
