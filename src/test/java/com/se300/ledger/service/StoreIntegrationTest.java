@@ -13,7 +13,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(classes = {TestSmartStoreApplication.class} )
+@SpringBootTest(classes = { TestSmartStoreApplication.class })
 public class StoreIntegrationTest {
 
     @Autowired
@@ -27,7 +27,6 @@ public class StoreIntegrationTest {
         assertAll("Verify Account properties",
                 () -> assertEquals(2, store.getId()),
                 () -> assertEquals("75 Forbes", store.getAddress()),
-                () -> assertEquals("My First Store", store.getDescription())
-        );
+                () -> assertEquals("My First Store", store.getDescription()));
     }
 }

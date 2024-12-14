@@ -1,10 +1,11 @@
 package com.se300.ledger.controller;
 
-import com.se300.ledger.SmartStoreApplication;
 import com.se300.ledger.TestSmartStoreApplication;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -15,6 +16,8 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = TestSmartStoreApplication.class)
 public class LedgerRestMockControllerTest {
 
     @Autowired
@@ -29,12 +32,9 @@ public class LedgerRestMockControllerTest {
 
     @Test
     public void testGetAccountById() throws Exception {
-
-        // TODO - Done?: Implement Test Retrieving Account by Id Mock Testing
-        mockMvc.perform(get("/accounts/1"))
-                .andExpect(status().isOk())
+        mockMvc.perform(get("/accounts/1")).andExpect(status().isOk())
                 .andExpect(content().contentType("application/json"))
-                .andExpect(jsonPath("$.address").value("123 Main St"))
-                .andExpect(jsonPath("$.balance").value(100));
+                .andExpect(jsonPath("$.address").value("1"))
+                .andExpect(jsonPath("$.balance").value(500));
     }
 }

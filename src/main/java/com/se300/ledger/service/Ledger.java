@@ -27,6 +27,9 @@ public class Ledger implements LedgerAPI {
     @Autowired
     TransactionRepository transactionRepository;
 
+    @Autowired
+    AccountRepository accountRepository;
+
     private String name;
     private String description;
     private String seed;
@@ -35,15 +38,11 @@ public class Ledger implements LedgerAPI {
 
     private static Ledger ledger;
 
-    @Autowired
-    private AccountRepository accountRepository;
-
     @PostConstruct
     private void createMasterAccount() {
         Account masterAccount = new Account("master", Integer.MAX_VALUE);
         uncommittedBlock.addAccount("master", masterAccount);
 
-        // Save the account repository, functions similarly from TransactionRepository
         accountRepository.save(masterAccount);
     }
 
@@ -136,21 +135,39 @@ public class Ledger implements LedgerAPI {
      * @param address
      * @return Account representing account in the Blockchain
      */
-
-    public Account createAccount(String address) throws LedgerException {
+    @Override
+    public Account createAccount(String address, int balance) throws LedgerException {
 
         if (uncommittedBlock.getAccount(address) != null) {
             throw new LedgerException("Create Account", "Account Already Exists");
         }
 
-        Account account = new Account(address, 0);
+        Account account = new Account(address, balance);
 
         uncommittedBlock.addAccount(address, account);
 
-        // Save the new account
-        accountRepository.save(account);
+        account = accountRepository.save(account);
 
         return account;
+    }
+
+    public Account getAccount(String address) throws LedgerException {
+        // Check if the account exists in the uncommitted block
+        Account account = uncommittedBlock.getAccount(address);
+        if (account != null) {
+            return account;
+        }
+
+        // If not found, check in the committed blocks
+        for (Block block : blockMap.values()) {
+            account = block.getAccount(address);
+            if (account != null) {
+                return account;
+            }
+        }
+
+        // If the account is not found in any block, throw an exception
+        throw new LedgerException("Get Account", "Account Not Found");
     }
 
     /**
@@ -225,7 +242,6 @@ public class Ledger implements LedgerAPI {
                 Account tempAccount = (Account) account.clone();
                 uncommittedBlock.addAccount(tempAccount.getAddress(), tempAccount);
 
-                // Save the replicated account
                 accountRepository.save(tempAccount);
             }
 
@@ -246,7 +262,7 @@ public class Ledger implements LedgerAPI {
     public Integer getAccountBalance(String address) throws LedgerException {
 
         if (blockMap.isEmpty()) {
-            throw new LedgerException(" Balance", "Account Is Not Committed to a Block");
+            throw new LedgerException("Get Account Balance", "Account Is Not Committed to a Block");
         }
 
         Block block = blockMap.lastEntry().getValue();

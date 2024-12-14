@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = {TestSmartStoreApplication.class})
+@SpringBootTest(classes = { TestSmartStoreApplication.class })
 public class StoreMockTest {
 
     @MockBean
@@ -43,7 +43,6 @@ public class StoreMockTest {
         assertAll("Verify Account properties",
                 () -> assertEquals(copyStore.getId(), store.getId()),
                 () -> assertEquals(copyStore.getAddress(), store.getAddress()),
-                () -> assertEquals(copyStore.getDescription(), store.getDescription())
-        );
+                () -> assertEquals(copyStore.getDescription(), store.getDescription()));
     }
 }

@@ -35,8 +35,7 @@ public class RestExternalMockControllerTest {
     @Test
     void testGetAccountById() throws JSONException {
 
-        // TODO - Done?: Implement Retrieving Account by Id Using External Mock Testing
-        String expectedJson = "{\"id\":\"1\",\"name\":\"John Doe\",\"balance\":1000}";
+        String expectedJson = "{\"address\":\"1\",\"balance\":500}";
 
         ExtractableResponse<Response> response = RestAssured
                 .given()
@@ -44,7 +43,7 @@ public class RestExternalMockControllerTest {
                 .auth().basic("sergey", "chapman")
                 .contentType(ContentType.JSON)
                 .when()
-                .get("https://67343da5a042ab85d1195422.mockapi.io/accounts/1")
+                .get("https://675b43699ce247eb19361a57.mockapi.io/accounts/1")
                 .then()
                 .statusCode(200)
                 .extract();

@@ -1,48 +1,56 @@
 package com.se300.ledger.service;
 
+import com.se300.ledger.TestSmartStoreApplication;
 import com.se300.ledger.model.Account;
-import com.se300.ledger.model.StoreModelException;
 import com.se300.ledger.repository.AccountRepository;
 
+import jakarta.annotation.PostConstruct;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
+@SpringBootTest(classes = { TestSmartStoreApplication.class })
 public class LedgerMockTest {
 
-    @Mock
+    @MockBean
+    @Qualifier("AccountRepository")
     private AccountRepository accountRepository;
 
-    @InjectMocks
+    @Autowired
     private Ledger ledger;
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+    @PostConstruct
+    public void prepare() {
+        this.ledger.accountRepository = accountRepository;
     }
 
     @Test
-    public void testAccountRepository() throws LedgerException, StoreModelException {
-        // TODO: Implement Account Repository Mock Testing
+    public void testAccountRepository() throws LedgerException {
+        // Create a mock Account object
+        Account account = new Account("7", 500);
 
-        String address = "123 Main St";
-        Account mockAccount = new Account(address, 100);
+        // Define the behavior of the mock repository
+        when(accountRepository.save(any())).thenReturn(account);
 
-        when(accountRepository.findByAddress(address)).thenReturn(mockAccount);
+        // Call the method under test
+        Account savedAccount = ledger.createAccount("7", 500);
 
-        Account retrievedAccount = ledger.createAccount(address);
+        // Verify that the repository's save method was called once
+        verify(accountRepository, times(1)).save(any(Account.class));
 
-        assertEquals(mockAccount.getAddress(), retrievedAccount.getAddress());
-        assertEquals(mockAccount.getBalance(), retrievedAccount.getBalance());
-
-        // Verify that the repository's findByAddress method was called once
-        verify(accountRepository, times(1)).findByAddress(address);
+        // Assert that the returned account has the expected properties
+        assertAll("Verify Account properties",
+                () -> assertEquals(savedAccount.getAddress(), account.getAddress()),
+                () -> assertEquals(savedAccount.getBalance(), account.getBalance()));
     }
 }

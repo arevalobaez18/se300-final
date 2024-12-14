@@ -79,6 +79,7 @@ public class Account {
      * 
      * @return
      */
+    @Override
     public Object clone() {
         return new Account(this.getAddress(), this.balance);
     }

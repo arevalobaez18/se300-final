@@ -1,8 +1,6 @@
 package com.se300.ledger.service;
 
-import com.se300.ledger.model.Account;
-import com.se300.ledger.model.Block;
-import com.se300.ledger.model.Transaction;
+import com.se300.ledger.model.*;
 
 import java.util.Map;
 
@@ -15,7 +13,16 @@ public interface LedgerAPI {
      * @return The created Account object.
      * @throws LedgerException if the account already exists.
      */
-    Account createAccount(String address) throws LedgerException;
+    Account createAccount(String address, int balance) throws LedgerException;
+
+    /**
+     * Retrieves an account by its address.
+     *
+     * @param address The address of the account.
+     * @return The Account object associated with the address.
+     * @throws LedgerException if the account is not found.
+     */
+    Account getAccount(String address) throws LedgerException;
 
     /**
      * Process a transaction in the blockchain.
